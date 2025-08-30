@@ -1,12 +1,12 @@
-package mago.study.domain.batch.application;
+package mago.study.domain.tweet.application;
 
 import lombok.RequiredArgsConstructor;
-import mago.study.domain.batch.dao.TweetTextRepository;
-import mago.study.domain.batch.domain.TweetText;
-import mago.study.domain.batch.dto.FileResult;
-import mago.study.domain.batch.dto.ImportResult;
-import mago.study.domain.batch.dto.ImportOptions;
-import mago.study.domain.batch.dto.ImportCounters;
+import mago.study.domain.tweet.dao.TweetTextRepository;
+import mago.study.domain.tweet.domain.TweetText;
+import mago.study.domain.tweet.dto.FileResult;
+import mago.study.domain.tweet.dto.ImportResult;
+import mago.study.domain.tweet.dto.ImportOptions;
+import mago.study.domain.tweet.dto.ImportCounters;
 import mago.study.global.util.TextCleaner;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;

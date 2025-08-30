@@ -2,6 +2,7 @@ package mago.study.domain.room.application;
 
 
 import lombok.RequiredArgsConstructor;
+import mago.study.domain.message.dao.MessageRepository;
 import mago.study.domain.room.dao.RoomRepository;
 import mago.study.domain.room.domain.RoomDocument;
 import mago.study.domain.room.dto.RoomAddDto;
@@ -18,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RoomService {
     private final RoomRepository roomRepository;
+    private final MessageRepository messageRepository;
 
     public RoomCreateRes createRoom(RoomAddDto roomAddDto) {
         RoomDocument roomDocument = roomRepository.save(RoomDocument.of(roomAddDto));
@@ -39,11 +41,12 @@ public class RoomService {
         return RoomGetDto.from(room);
     }
 
-    public void resetRoom(String roomId) {
-        // TODO 채팅방 리셋 처리
+    public void resetRoom(ObjectId roomId) {
+        messageRepository.deleteAllByRoomId(roomId);
     }
 
     public void deleteRoom(ObjectId roomId) {
         roomRepository.deleteById(roomId);
+        messageRepository.deleteAllByRoomId(roomId);
     }
 }

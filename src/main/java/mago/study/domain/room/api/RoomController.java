@@ -40,7 +40,7 @@ public class RoomController {
 
     @PostMapping("/{roomId}/reset")
     public ResponseEntity<String> resetRoom(
-            @PathVariable String roomId
+            @PathVariable ObjectId roomId
     ) {
         roomService.resetRoom(roomId);
         return ResponseEntity.ok("success");

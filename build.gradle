@@ -37,6 +37,16 @@ dependencies {
 	// JSON 처리
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	
+	// CSV 파서
+	implementation 'org.apache.commons:commons-csv:1.11.0'
+
+	// HTML 엔티티 디코드/문자 보정
+	implementation 'org.apache.commons:commons-text:1.11.0'
+
+	// PDF 파싱
+	implementation 'org.apache.pdfbox:pdfbox:2.0.29'
+	implementation 'org.apache.pdfbox:pdfbox-tools:2.0.29'
+	
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

@@ -1,4 +1,4 @@
-package mago.study.domain.batch.domain;
+package mago.study.domain.tweet.domain;
 
 
 import lombok.AllArgsConstructor;

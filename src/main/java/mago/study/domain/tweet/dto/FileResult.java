@@ -1,4 +1,4 @@
-package mago.study.domain.batch.dto;
+package mago.study.domain.tweet.dto;
 
 public record FileResult(
         String path,

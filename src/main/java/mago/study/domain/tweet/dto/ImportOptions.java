@@ -1,4 +1,4 @@
-package mago.study.domain.batch.dto;
+package mago.study.domain.tweet.dto;
 
 /**
  * CSV 정제/저장 동작에 필요한 옵션 묶음 (record).
