@@ -37,6 +37,10 @@ dependencies {
 	// JSON 처리
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	
+	// Apache Commons (CSV, Text 처리)
+	implementation 'org.apache.commons:commons-csv:1.10.0'
+	implementation 'org.apache.commons:commons-text:1.11.0'
+	
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
