@@ -41,11 +41,21 @@ public class RagTestController {
     @PostMapping("/init/{character}")
     public Map<String, String> initializeCharacter(@PathVariable String character) {
         try {
-            // 캐릭터 임베딩 강제 초기화 (RagService의 generateAnswer에서 자동으로 됨)
-            ragService.generateAnswer(character, new MessageReqDto("안녕하세요"));
-            return Map.of("status", "success", "message", "Character initialized successfully");
+            vectorStoreService.createEmbeddingsForCharacter(character);
+            return Map.of("status", "success", "message", "Character embeddings created successfully");
         } catch (Exception e) {
             log.error("Failed to initialize character: {}", character, e);
+            return Map.of("status", "error", "message", e.getMessage());
+        }
+    }
+    
+    @PostMapping("/embeddings/{character}")
+    public Map<String, String> createEmbeddings(@PathVariable String character) {
+        try {
+            vectorStoreService.createEmbeddingsForCharacter(character);
+            return Map.of("status", "success", "message", "Embeddings created for character: " + character);
+        } catch (Exception e) {
+            log.error("Failed to create embeddings for character: {}", character, e);
             return Map.of("status", "error", "message", e.getMessage());
         }
     }
