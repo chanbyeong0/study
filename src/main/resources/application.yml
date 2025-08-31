@@ -1,10 +1,19 @@
 spring:
+  application:
+    name: study-project
   data:
     mongodb:
-      host: localhost
-      port: 27017
-      database: study
-
+      uri: ${DB_URI}
+server:
+  port: 8080
+api:
+  key: ${API_KEY}
+tweet-import:
+  file-paths: classpath:data/realDonaldTrump_in_office.csv,classpath:data/realDonaldTrump_bf_office.csv
+  batch-size: 1000
+  remove-hashtag: true
+  remove-mention: true
+  remove-emoji: true
 rag:
   azure-openai:
     api-key: ${AZURE_OPENAI_API_KEY}

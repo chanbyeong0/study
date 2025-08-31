@@ -36,10 +36,10 @@ public class MessageService {
         );
         
         // 사용자 메시지 저장
-        messageRepository.save(MessageDocument.of(messageReqDto, roomId, Role.USER));
+        messageRepository.save(MessageDocument.of(messageReqDto.content(), roomId, Role.USER));
         
         // RAG로 AI 응답 생성
-        MessageGetDto ragResponse = ragService.generateAnswer(roomDocument.getCharacter(), messageReqDto);
+        MessageGetDto ragResponse = ragService.generateAnswer(roomId, roomDocument.getCharacter(), messageReqDto);
         
         // AI 응답도 DB에 저장 (BaseDocument가 createAt을 자동으로 설정)
         MessageDocument assistantMessage = MessageDocument.builder()

@@ -27,10 +27,10 @@ public class MessageDocument extends BaseDocument {
     // TODO 추후 USER로 이동
     private Role role;
 
-    public static MessageDocument of(MessageReqDto messageReqDto, ObjectId roomId, Role role) {
+    public static MessageDocument of(String content, ObjectId roomId, Role role) {
         return MessageDocument.builder()
                 .roomId(roomId)
-                .content(messageReqDto.content())
+                .content(content)
                 .role(role)
                 .build();
     }
