@@ -21,71 +21,9 @@ import java.util.Map;
 public class RagService {
     
     private final ChatLanguageModel chatLanguageModel;
-    private final VectorStoreService vectorStoreService;
+    private final MongoVectorStoreService vectorStoreService;
     private final MessageRepository messageRepository;
-    
-    // 캐릭터별 기본 지식 데이터 (실제로는 외부 파일이나 DB에서 로드)
-    private static final Map<String, List<String>> CHARACTER_KNOWLEDGE = Map.of(
-        "einstein", List.of(
-            """
-            알베르트 아인슈타인 (Albert Einstein, 1879-1955)
-            독일 태생의 이론물리학자로, 20세기 가장 영향력 있는 과학자 중 하나입니다.
-            
-            주요 업적:
-            1. 특수상대성이론 (1905): 시간과 공간이 절대적이지 않고 상대적이라는 것을 증명
-            2. 일반상대성이론 (1915): 중력을 시공간의 곡률로 설명
-            3. 광전효과 연구로 1921년 노벨물리학상 수상
-            4. E=mc² 공식으로 질량-에너지 등가성 발견
-            
-            성격적 특징:
-            - 깊은 사색을 즐기는 철학적 사고
-            - 상상력을 중시: "상상력은 지식보다 중요하다"
-            - 평화주의자이자 인도주의자
-            - 호기심이 많고 질문을 멈추지 않는 탐구정신
-            """,
-            """
-            상대성이론에 대한 아인슈타인의 설명:
-            
-            특수상대성이론의 핵심:
-            - 광속은 모든 관성계에서 일정하다
-            - 시간 지연(time dilation): 빠르게 움직이는 물체의 시간은 느려진다
-            - 길이 수축: 움직이는 물체는 운동 방향으로 수축한다
-            - E=mc²: 질량과 에너지는 상호 변환 가능하다
-            
-            일반상대성이론의 핵심:
-            - 중력은 시공간의 곡률이다
-            - 질량이 있는 물체는 시공간을 휘게 만든다
-            - 빛도 중력의 영향을 받는다
-            - 시간은 중력장에서 느려진다
-            
-            "가장 이해할 수 없는 것은 우주가 이해 가능하다는 것이다."
-            """
-        ),
-        "trump", List.of(
-            """
-            도널드 트럼프 (Donald Trump, 1946-)
-            미국의 기업인이자 제45대 대통령입니다.
-            
-            주요 경력:
-            1. 부동산: 트럼프 오르가니제이션 운영 - "최고의 딜을 만드는 것이 내 전문이다!"
-            2. 미디어: 리얼리티 TV 프로그램 "더 어프렌티스" 진행 - "You're fired!"로 유명
-            3. 정치: 2017-2021년 미국 대통령 재임 - "Make America Great Again!"
-            4. 비즈니스: 트럼프 타워, 골프장, 호텔 등 운영 - "모든 것이 최고급, 최고 품질!"
-            
-            트럼프의 명언과 특징:
-            - "나는 딜의 달인이다. 최고의 딜을 만든다!"
-            - "내가 하는 모든 것은 tremendous, fantastic, incredible하다!"
-            - "나는 매우 똑똑한 사람이다. 최고의 대학을 나왔다!"
-            - "승리하는 것이 중요하다. 나는 항상 승리한다!"
-            - "가짜 뉴스는 믿으면 안 된다. 나만 믿어라!"
-            
-            말투 특징:
-            - 자신감 넘치고 과장된 표현을 자주 사용
-            - "believe me", "tremendous", "fantastic" 등의 단어를 반복 사용
-            - 직설적이고 단순명료한 표현을 선호
-            """
-        )
-    );
+    private final CharacterDataService characterDataService;
     
     public MessageGetDto generateAnswer(String character, MessageReqDto messageReqDto) {
         try {
@@ -126,9 +64,9 @@ public class RagService {
     }
     
     private void initializeCharacterKnowledge(String character) {
-        List<String> knowledge = CHARACTER_KNOWLEDGE.get(character);
-        if (knowledge != null) {
-            log.info("Initializing knowledge for character: {}", character);
+        List<String> knowledge = characterDataService.loadCharacterData(character);
+        if (!knowledge.isEmpty()) {
+            log.info("Initializing knowledge for character: {} with {} documents", character, knowledge.size());
             vectorStoreService.createEmbeddingsForCharacter(character, knowledge);
         } else {
             log.warn("No knowledge found for character: {}", character);
