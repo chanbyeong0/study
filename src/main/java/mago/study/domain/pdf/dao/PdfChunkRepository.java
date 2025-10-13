@@ -13,12 +13,6 @@ public interface PdfChunkRepository extends MongoRepository<PdfChunk, ObjectId> 
     
     List<PdfChunk> findByPdfDocumentIdOrderByChunkIndex(ObjectId pdfDocumentId);
     
-    @Query("{'pdfDocumentId': ?0, 'chunkIndex': ?1}")
-    PdfChunk findByPdfDocumentIdAndChunkIndex(ObjectId pdfDocumentId, Integer chunkIndex);
-    
-    @Query("{'pdfDocumentId': ?0, 'hasFormulas': true}")
-    List<PdfChunk> findByPdfDocumentIdAndHasFormulas(ObjectId pdfDocumentId);
-    
     @Query("{'text': {$regex: ?0, $options: 'i'}}")
     List<PdfChunk> findByTextContaining(String searchText);
     

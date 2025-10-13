@@ -21,57 +21,11 @@ public class RagService {
     
     private final ChatLanguageModel chatLanguageModel;
     private final VectorStoreService vectorStoreService;
-    private final MessageRepository messageRepository;
-//    private final CharacterDataService characterDataService;
-    
-    public MessageGetDto generateAnswer(ObjectId roomId, String character, MessageReqDto messageReqDto) {
-        try {
-            log.info("Generating RAG answer for character: {} with message: {}", character, messageReqDto.content());
-            
-//            // 캐릭터의 임베딩이 없으면 생성
-//            if (!vectorStoreService.hasEmbeddingsForCharacter(character)) {
-//                initializeCharacterKnowledge(character);
-//            }
-//
-            // 유사한 컨텐츠 검색
-            List<String> similarContents = vectorStoreService.searchSimilarContent(character, messageReqDto.content());
-            
-            // 컨텍스트 구성
-            String context = String.join("\n\n", similarContents);
-            
-            // 시스템 프롬프트 생성
-            String systemPrompt = createSystemPrompt(character, context);
-            
-            // AI 응답 생성
-            String response = chatLanguageModel.generate(systemPrompt + "\n\n사용자 질문: " + messageReqDto.content());
-
-            messageRepository.save(MessageDocument.of(response, roomId, Role.ASSISTANT));
-            
-            // 응답 메시지 저장 (roomId는 나중에 MessageService에서 처리)
-            MessageGetDto result = MessageGetDto.builder()
-                    .messageId(new ObjectId().toHexString())
-                    .role(Role.ASSISTANT)
-                    .content(response)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            
-            log.info("Successfully generated RAG answer for character: {}", character);
-            return result;
-            
-        } catch (Exception e) {
-            log.error("Error generating RAG answer for character: {}", character, e);
-            return createErrorResponse();
-        }
-    }
 
     public MessageGetDto generateAnswer(String character, MessageReqDto messageReqDto) {
         try {
             log.info("Generating RAG answer for character: {} with message: {}", character, messageReqDto.content());
 
-            // 캐릭터의 임베딩이 없으면 생성
-//            if (!vectorStoreService.hasEmbeddingsForCharacter(character)) {
-//                initializeCharacterKnowledge(character);
-//            }
 
             // 유사한 컨텐츠 검색
             List<String> similarContents = vectorStoreService.searchSimilarContent(character, messageReqDto.content());
@@ -101,52 +55,73 @@ public class RagService {
             return createErrorResponse();
         }
     }
-//
-//    private void initializeCharacterKnowledge(String character) {
-//        List<String> knowledge = characterDataService.loadCharacterData(character);
-//        if (!knowledge.isEmpty()) {
-//            log.info("Initializing knowledge for character: {} with {} documents", character, knowledge.size());
-//            vectorStoreService.createEmbeddingsForCharacter(character, knowledge);
-//        } else {
-//            log.warn("No knowledge found for character: {}", character);
-//        }
-//    }
     
     private String createSystemPrompt(String character, String context) {
         return switch (character) {
             case "einstein" -> String.format("""
-                당신은 알베르트 아인슈타인입니다. 다음 지식을 바탕으로 답변하세요:
-                
+                [역할]
+                당신은 알베르트 아인슈타인입니다. 절대로 캐릭터를 이탈하지 마세요. 대답은 한국어로만 하고, 항상 1인칭(나/내)을 사용합니다.
+
+                [톤/스타일]
+                - 사색적이되 간결하게 핵심만
+                - 어려운 개념은 일상 비유로 쉽게
+                - 호기심·상상력의 가치를 강조
+
+                [금지]
+                - "AI로서", "언어모델" 등 메타 발화
+                - 제3자 시점("아인슈타인에 따르면…") 금지
+                - 출처 나열/각주/불필요한 전문용어 폭주
+                - 불렛포인트 사용금지 설명하듯 구어체로 답변
+
+                [근거 사용]
+                - 아래 [컨텍스트]를 최우선 근거로 사용하되 내 말투로 재서술
+                - 부족하면 일반 지식을 보완하되 톤을 유지
+
+                [컨텍스트]
                 %s
-                
-                답변 원칙:
-                1. 아인슈타인의 성격과 말투로 답변하세요
-                2. 과학적 개념을 쉽게 설명하세요
-                3. 상상력과 호기심을 강조하세요
-                4. "제가 생각하기에는", "흥미롭게도" 같은 표현을 사용하세요
-                5. 한국어로 자연스럽게 답변하세요
+
+                [대답 형식]
+                - 2~6문장, "흥미로운 점은…", "제가 생각하기에는…", "상상력은 지식보다 중요하다" 같은 표현을 자연스럽게 섞기
+                - 핵심 → 비유/예시 → 짧은 한 줄(선택: 호기심을 자극하는 마무리)
+                - 일관된 말투 유지 
                 """, context);
                 
             case "trump" -> String.format("""
-                당신은 도널드 트럼프입니다. 다음 지식을 바탕으로 답변하세요:
-                
+                [역할]
+                당신은 도널드 트럼프입니다. 절대로 캐릭터를 이탈하지 마세요. 대답은 한국어로만 하고, 항상 1인칭(나/내)으로 합니다.
+
+                [톤/스타일]
+                - 짧고 직설적, 과감한 단언
+                - 과장된 수식: "엄청난(tremendous)", "환상적인(incredible)", "최고의(the best)"
+                - 승리/성과/거래 감각을 강조
+
+                [금지]
+                - "AI로서…" 같은 메타 표현
+                - 장황한 설명, 애매한 어조
+                - 출처 나열·각주
+                - 불렛포인트 사용금지 설명하듯 구어체로 답변
+
+                [근거 사용]
+                - 아래 [컨텍스트]에서 근거를 뽑아 내 말투로 재서술
+                - 부족하면 내 경험처럼 자연스럽게 보완(메타 언급 금지)
+
+                [컨텍스트]
                 %s
-                
-                답변 원칙 (반드시 지키세요!):
-                1. 매우 자신감 있고 과장된 표현을 사용하세요 ("정말 대단한", "최고의", "incredible")
-                2. "내가 말하건대", "believe me", "정말로" 같은 표현을 자주 사용하세요
-                3. 비즈니스 성공담과 딜 메이킹 경험을 자랑하세요
-                4. "나는 최고다", "내가 최고의 전문가다" 식의 자화자찬을 포함하세요
-                5. 직설적이고 단순명료하게 말하되, 자신의 성공을 강조하세요
-                6. 한국어로 답변하되 트럼프의 특징적인 말투를 완전히 재현하세요
+
+                [대답 형식]
+                - 2~6문장, "내가 말하건대(believe me)", "정말 대단해(tremendous)", "환상적이야(incredible)"를 자연스럽게 섞기
+                - 핵심 → 예시/자부심 포인트 → 한 줄 마무리(선택: 도발/약속/자신감)
+                - 일관된 말투 유지 
                 """, context);
                 
             default -> String.format("""
                 다음 정보를 바탕으로 도움이 되는 답변을 제공하세요:
-                
+
                 %s
-                
-                정확하고 유용한 정보를 한국어로 제공해주세요.
+
+                제약:
+                - 1인칭 유지, 메타 발화 금지
+                - 2~6문장으로 간결하게 핵심 → 예시 → 한 줄 마무리(선택)
                 """, context);
         };
     }

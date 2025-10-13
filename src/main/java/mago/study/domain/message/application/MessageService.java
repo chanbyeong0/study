@@ -19,6 +19,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -39,7 +41,7 @@ public class MessageService {
         messageRepository.save(MessageDocument.of(messageReqDto.content(), roomId, Role.USER));
         
         // RAG로 AI 응답 생성
-        MessageGetDto ragResponse = ragService.generateAnswer(roomId, roomDocument.getCharacter(), messageReqDto);
+        MessageGetDto ragResponse = ragService.generateAnswer(roomDocument.getCharacter(), messageReqDto);
         
         // AI 응답도 DB에 저장 (BaseDocument가 createAt을 자동으로 설정)
         MessageDocument assistantMessage = MessageDocument.builder()
@@ -62,13 +64,18 @@ public class MessageService {
     public MessageSlice getMessageHistory(ObjectId roomId, String before, int limit) {
         Criteria criteria = Criteria.where("roomId").is(roomId);
 
-        // 커서(before)가 있으면 그 이전(_id lt)만
-        if (before != null && !before.isBlank() && org.bson.types.ObjectId.isValid(before)) {
-            criteria = criteria.and("_id").lt(new ObjectId(before));
+        // 커서(before)가 있으면 그 이전(createdAt lt)만
+        if (before != null && !before.isBlank()) {
+            try {
+                LocalDateTime beforeDateTime = LocalDateTime.parse(before);
+                criteria = criteria.and("createdAt").lt(beforeDateTime);
+            } catch (DateTimeParseException e) {
+                // 잘못된 날짜 형식인 경우 무시
+            }
         }
 
         Query query = new Query(criteria)
-                .with(Sort.by(Sort.Direction.DESC, "_id"))
+                .with(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .limit(limit + 1); // hasMore 판단용으로 +1
 
         List<MessageGetDto> list = mongoTemplate.find(query, MessageDocument.class)
@@ -81,7 +88,7 @@ public class MessageService {
             list = list.subList(0, limit);
         }
 
-        String nextCursor = list.isEmpty() ? null : list.getLast().messageId();
+        String nextCursor = list.isEmpty() ? null : list.getLast().createdAt().toString();  
 
         return new MessageSlice(list, nextCursor, hasMore);
     }

@@ -1,0 +1,78 @@
+# docker-compose.yml
+version: "3.9"
+
+services:
+  # Study Backend (Spring Boot)
+  study-backend:
+    build: .
+    container_name: study-backend
+    restart: unless-stopped
+    ports:
+      - "9003:9003"
+    env_file:
+      - .env
+    environment:
+      # Spring
+      SPRING_PROFILES_ACTIVE: docker
+
+      # MongoDB (애플리케이션이 쓰는 연결 문자열)
+      DB_URI: ${STUDY_DB_URI}
+
+      # App API Key (예: 내부용)
+      API_KEY: ${STUDY_API_KEY}
+
+      # Azure OpenAI 설정
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
+      AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION}
+      AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT}
+      AZURE_OPENAI_CHAT_DEPLOYMENT: ${AZURE_OPENAI_CHAT_DEPLOYMENT}
+    depends_on:
+      - audion-test-mongodb
+    networks:
+      - study-network
+
+  # MongoDB
+  audion-test-mongodb:
+    image: mongo:7
+    container_name: audion-db-test
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    ports:
+      - "9001:27017"
+    volumes:
+      - mongo_audion-test-mongo-data:/data/db
+    networks:
+      - study-network
+
+  # Mongo Express (관리 도구)
+  audion-test-express:
+    image: mongo-express:latest
+    container_name: audion-express
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - audion-test-mongodb
+    environment:
+      # 한 줄 URL 방식(권장)
+      ME_CONFIG_MONGODB_URL: ${ME_CONFIG_MONGODB_URL}
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+    ports:
+      - "9002:8081"
+    networks:
+      - study-network
+
+networks:
+  study-network:
+    driver: bridge
+
+volumes:
+  mongo_audion-test-mongo-data:
+    external: true
